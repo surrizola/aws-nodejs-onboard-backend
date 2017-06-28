@@ -30,24 +30,53 @@
         console.log('main')
 
         $scope.faces = [];
-        // create a message to display in our view
-        $scope.message = 'Everyone come and see how good I look!';
-        var req = $http({
-            method: 'POST',
-            //url: 'http://jsonplaceholder.typicode.com/posts', 
-            url: '/api/faces/v1'});
-        req.then(function(data, err){
-          console.log(data);
-          console.log('errr'+err);
-          $scope.faces = data.data.Faces;
-          console.log($scope.faces)
-        }, 
-        function(error){
-          console.log(error)
-          alert(error.data.message)
-        })
+
+        $scope.refreshFaces  = function(){
+            console.log('faces')
+            var req = $http({
+                method: 'POST',
+                //url: 'http://jsonplaceholder.typicode.com/posts', 
+                url: '/api/faces/v1'});
+            req.then(function(data, err){
+              console.log(data);
+              console.log('errr'+err);
+              $scope.faces = data.data.Faces;
+              console.log($scope.faces)
+            }, 
+            function(error){
+              console.log(error)
+              alert(error.data.message)
+            })
 
 
+
+        }
+
+         $scope.deleteFace  = function(face){
+            console.log(face);
+
+            body = JSON.stringify({faceId: face.FaceId})
+            var req = $http({
+                method: 'POST',
+                data: body, 
+                url: '/api/deleteface/v1'  });
+            req.then(function(data, err){
+              console.log(data);
+              console.log('errr'+err);
+              $scope.refreshFaces();
+              //console.log($scope.faces)
+            }, 
+            function(error){
+              console.log(error)
+              alert(error.data.message)
+            })
+
+
+              
+
+         }
+
+        $scope.refreshFaces();
 
 
     });

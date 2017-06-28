@@ -96,6 +96,25 @@ router.post('/faces/v1', function(req, res, next) {
 	
 });
 
+router.post('/deleteface/v1', function(req, res, next) {
+	faceId = req.body.faceId
+	console.log('delete face '+faceId)
+	awsreco.delete_face(
+		faceId,
+			function(data){
+				console.log('ok')
+				res.json(data)	
+			},
+			function(error){
+					console.log('error')
+					res.status(500);
+					res.json(error);										
+				}
+			)
+	
+});
+
+
 
 router.post('/validate/v1', function(req, res, next) {
 	userName = req.body.name

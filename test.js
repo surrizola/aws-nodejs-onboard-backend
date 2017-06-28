@@ -4,6 +4,219 @@ var awsreco = require('./sample');
 
 
 
+
+function identify_from_file(imageFile, name, callback, errorCallback){
+	
+	fs.readFile(imageFile, function (err, data) {
+ 		 if (err) { throw err; }
+
+		var base64data = new Buffer(data, 'binary');
+
+		var params = {
+		  CollectionId: col_name,	
+		  Image: { /* required */
+		    Bytes: base64data    
+		  },
+		  FaceMatchThreshold: 75,
+		  MaxFaces: 10
+		};
+
+		rekognition.searchFacesByImage(params, function(err, data) {
+		  if (err) {
+		  		console.log( ' **** IDENTIFY ERROR ******')
+		  		console.log(err, err.stack); 
+		  		errorCallback({error:err});
+		  }
+		  else     {
+		  			console.log('***** IDENTIFY END ****** '+imageFile)
+		  			if (data.FaceMatches.length > 0){
+		  				console.log('DETECCION EXITOSA')
+						//console.log(data.FaceMatches); 
+						face = data.FaceMatches[0]
+						//console.log(face); 
+
+						//console.log('USER '+face.Face.ExternalImageId)
+						//console.log(' SIMILARITY : '+face.Similarity); 
+						//console.log(' FACE ID '+face.Face.FaceId)
+						//console.log(' IMAGE ID '+face.Face.ImageId)
+						//console.log(' Confidence '+face.Face.Confidence)
+
+						callback(face)
+		  			} else {
+		  				console.log(' *** IDENTIFY NO HAY CARACAS **** ')	
+		  				callback(null)
+		  			}
+
+			}
+		}, function(a, b){
+
+			console.log('test d error')
+		});
+
+	});
+
+
+}
+
+
+var test_compare = function(){
+ return new Promise(function (resolve, reject) {
+	
+	compare_faces_from_s3('chily0.jpg', 'chily1.jpg', 
+				function(face){
+								console.log('IMG  USER '+face.Face.ExternalImageId + ' SIMILARITY '+face.Similarity)
+								resolve(face)
+				});	
+	});
+}
+
+
+
+function test_identity(){
+
+
+		fs.readFile('images_knows/27861335112_fc13951d18_o.jpg', function (err, data) {
+		  	if (err) { throw err; }
+
+		  	var base64data = new Buffer(data, 'binary');
+
+		  	identify_from_base64(base64data, 
+		  						function(ok){},
+		  						function(error){
+		  							console.log(error.message)
+		  						}
+		  						);
+		  
+
+		});
+
+
+}
+
+
+
+function index_from_s3(s3name ,user_name){
+
+			var params = {
+		  CollectionId: col_name,
+		  Image: { /* required */
+		    S3Object: {
+			    Bucket: bucket_name, 
+			    Name: s3name
+			   }
+		  },
+		   ExternalImageId: user_name, 
+		  DetectionAttributes: []
+		  
+		};
+		rekognition.indexFaces(params, function(err, data) {
+		  if (err) console.log(err, err.stack); // an error occurred
+		  else     {
+		  	console.log('***** OK INDEX ****** ')
+		  	console.log(data);           
+		  }
+		});
+}
+
+function compare_faces_from_s3(s3_image1, s3_image2, callback){
+
+
+	 var params = {
+	  SimilarityThreshold: 75, 
+	  SourceImage: {
+	   S3Object: {
+	    Bucket: bucket_name, 
+	    Name: s3_image1
+	   }
+	  }, 
+	  TargetImage: {
+	   S3Object: {
+	    Bucket: bucket_name, 
+	    Name: s3_image2
+	   }
+	  }
+	 };
+
+	rekognition.compareFaces(params, function (err, data) {
+	  if (err) console.log(err, err.stack); // an error occurred
+	  else     {
+			console.log('***** COMPARE  ****** ')
+	 			 console.log(data);
+				if (data.FaceMatches.length > 0){
+						face = data.FaceMatches[0]
+						callback(face)
+		  			}else {
+		  				console.log('no se detecto ninguno')	
+		  				callback(null)
+		  			}	 			 
+			}
+	});
+
+}
+
+
+function upload_know_from_file(imageFile, id_user){
+// Read in the file, convert it to base64, store to S3
+
+		//console.log(imageFile)
+
+		var fn =path.basename(imageFile)
+
+		fs.readFile(imageFile, function (err, data) {
+		  if (err) { throw err; }
+
+		  var base64data = new Buffer(data, 'binary');
+
+		 var params = {
+		  Body: base64data, 
+		  Bucket: bucket_name, 
+		  Key: fn, 
+		  Tagging: "id_user="+id_user
+		 };
+
+		  //var s3 = new AWS.S3();
+		  s3.putObject(params,function (resp) {
+		    console.log(arguments);
+		    console.log('Successfully uploaded package.');
+		  });
+
+		});
+}
+
+
+
+
+function init_collection(name){
+
+	/* This operation creates a Rekognition collection for storing image data. */
+
+ var params = {
+  CollectionId: name
+ };
+ awsreco.rekognition.createCollection(params, function(err, data) {
+   if (err) console.log(err, err.stack); // an error occurred
+   else     console.log(data);           // successful response
+   
+ });
+}
+
+
+
+
+function delete_collection(name){
+
+	/* This operation creates a Rekognition collection for storing image data. */
+
+ var params = {
+  CollectionId: name
+ };
+ awsreco.rekognition.deleteCollection(params, function(err, data) {
+   if (err) console.log(err, err.stack); // an error occurred
+   else     console.log(data);           // successful response
+   
+ });
+}
+
 function test_get_faces(){
 	awsreco.get_faces(function(data1){console.log(data1);    })
 
@@ -71,9 +284,15 @@ function test_index(){
 }
 
 
+
 //saveToDisk(data1);	
 //test_index()
 
 
-test_get_faces();
+// test_get_faces();
+//delete_collection(awsreco.col_name)
+//init_collection(awsreco.col_name)
+console.log(test_get_faces());
+
+
 

@@ -4,17 +4,37 @@
 <!--
 <input type="file" id="file" name='file' onchange="angular.element(this).scope().profileimage(this)" />
 -->
-<div class="list-group">
-  <a href="#" class="list-group-item list-group-item-action flex-column align-items-start"  
-    ng-repeat="f in faces">
-    <div class="d-flex w-100 justify-content-between">
-      <h5 class="mb-1">USER : {{f.ExternalImageId}}</h5>
-      <small>Confidence "{{f.Confidence}}</small>
-    </div>
-    <p class="mb-1">Face ID: {{f.FaceId}}</p>
-    <small>Image ID {{f.ImageId}}</small>
-  </a>
+
+<div class="container">
+
+	<div class="col-lg-9">
+		<div class="list-group">
+		  <div  class="list-group-item list-group-item-action flex-column align-items-start clearfix"  
+		    ng-repeat="f in faces">
+		    <div class="d-flex w-100 justify-content-between">
+		      <h5 class="mb-1">USER : {{f.ExternalImageId}}</h5>
+		      <small>Confidence {{f.Confidence}}</small>
+		    </div>
+		    <p class="mb-1">Face ID: {{f.FaceId}}</p>
+
+
+		    <small>Image ID {{f.ImageId}}</small>
+
+
+		    <span class="pull-right button-group">                
+                <button type="button" class="btn btn-default" ng-click="deleteFace(f)">
+                	<span class="glyphicon glyphicon-remove"></span> Delete
+                </button>
+            </span>
+		  </div>
+
+		</div>
+	</div>
+	<div class="col-lg-3">
+		<button ng-click="refreshFaces()" class="btn btn-default">Refresh Faces</button>
+	</div>	
 
 </div>
+
     
    
