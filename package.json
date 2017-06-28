@@ -1,0 +1,20 @@
+{
+  "name": "ff-selfie-login",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "aws-sdk": "latest",
+    "body-parser": "~1.17.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "ejs": "latest",
+    "express": "~4.15.2",
+    "jade": "~1.11.0",
+    "multer": "^1.3.0",
+    "node-uuid": "^1.4.8",
+    "serve-favicon": "~2.4.2"
+  }
+}
