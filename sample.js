@@ -20,13 +20,15 @@ AWS.config.update(
 var s3 = new AWS.S3();
 var rekognition = new AWS.Rekognition();
 
-// Create a bucket and upload something into it
-//var bucketName = 'node-sdk-sample-' + uuid.v4();
 
 var bucket_name = "faces-onboarding-bucket-fluxit"
 
+// en la faces-onboarding-collection-1 ya estan indexados todos los fluxers
 var col_name = "faces-onboarding-collection-1"
 
+//https://s3.amazonaws.com/faces-onboarding-bucket-fluxit/santiago-urrizola.jpg
+
+var imag_base_urls = "https://s3.amazonaws.com/"+bucket_name
 
 var myFunc1 = function() { return "aaa" };
 var myFunc2 = function() { return "bbbb" };
@@ -40,7 +42,7 @@ exports.myFunc2 = myFunc2;
 var get_faces=function(callback, errorCallback){
 	 var params = {
 	  CollectionId: col_name, 
-	  MaxResults: 50
+	  MaxResults: 200
 	 };
 	 rekognition.listFaces(params, function(err, data) {
 	   	if (err) {
@@ -94,7 +96,7 @@ var  index_from_base64 = function(image_base64,username,  callback, errorCallbac
 		  	if (errorCallback){errorCallback(err)}
 		  }
 		  else {
-		  	console.log('***** OK INDEX ****** ')
+		  	console.log('***** OK INDEX ****** ['+username+']')
 		  	console.log(data);           
 		  	if (callback){
 		  		callback(data)
@@ -104,6 +106,45 @@ var  index_from_base64 = function(image_base64,username,  callback, errorCallbac
 
 
 }
+
+
+var store_ins3_foruser_frombase64= function(base64 , username, callback, errorcallback){
+// Read in the file, convert it to base64, store to S3
+
+		//console.log(imageFile)
+
+		//var fn =path.basename(imageFile)
+		var fn = username+'.jpg'
+		//fs.readFile(imageFile, function (err, data) {
+		  //if (err) { throw err; }
+
+		 var base64data = new Buffer(base64, 'binary');
+
+		 var params = {
+		  Body: base64data, 
+		  Bucket: bucket_name, 
+		  ACL: "public-read",
+		  Key: fn, 
+		  Tagging: "username="+username
+		 };
+
+		  //var s3 = new AWS.S3();
+		  s3.putObject(params,function (error, resp) {
+		  	 if (error) {
+		  		console.log(error, error.stack); 
+		  		if (errorCallback){errorcallback(error)}
+		  	}else {
+		  		console.log ('PUT OK FOR '+username)
+		  		callback(resp)
+		  		//console.log(arguments);
+		    	//console.log('error .'+error + '  RESP '+resp);	
+		  	}
+		    
+		  });
+
+		//});
+}
+
 
 
 
@@ -199,9 +240,12 @@ exports.compare_from_base64 = compare_from_base64;
 exports.index_from_base64 = index_from_base64;
 
 
+exports.store_ins3_foruser_frombase64 = store_ins3_foruser_frombase64
+
 exports.get_faces = get_faces
 exports.delete_face = delete_face
 
 exports.rekognition = rekognition
 exports.s3 = s3
 exports.col_name = col_name
+exports.imag_base_urls = imag_base_urls

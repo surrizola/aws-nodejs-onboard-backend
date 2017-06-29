@@ -62,11 +62,14 @@ router.post('/identify/v1', function(req, res, next) {
 				console.log(' FACE ID '+face.Face.FaceId)
 				console.log(' IMAGE ID '+face.Face.ImageId)
 				console.log(' Confidence '+face.Face.Confidence)
+				image_url = awsreco.imag_base_urls+ '/'+face.Face.ExternalImageId+ '.jpg'
+				console.log('URL  '+image_url)
 				face_detect = {	'check':'True',
 							'name': face.Face.ExternalImageId,	
 							'faceId':face.Face.FaceId,
 							'similarity': face.Similarity,
-							'confidence': face.Face.Confidence
+							'confidence': face.Face.Confidence,
+							'image_url': image_url
 						}
 				console.log(face_detect)
 				res.json(face_detect);			
@@ -136,7 +139,9 @@ router.post('/validate/v1', function(req, res, next) {
 								'name': face.Face.ExternalImageId,	
 								'faceId':face.Face.FaceId,
 								'similarity': face.Similarity, 
-								'confidence': face.Face.Confidence
+								'confidence': face.Face.Confidence,
+								'image_url': awsreco.imag_base_urls+ '/'+face.Face.ExternalImageId+ '.jpg'
+
 							}
 					console.log(face_detect)
 					res.json(face_detect);								

@@ -1,62 +1,10 @@
 var     fs = require('fs');
 var awsreco = require('./sample');
+var path = require('path');
 
 
 
 
-
-function identify_from_file(imageFile, name, callback, errorCallback){
-	
-	fs.readFile(imageFile, function (err, data) {
- 		 if (err) { throw err; }
-
-		var base64data = new Buffer(data, 'binary');
-
-		var params = {
-		  CollectionId: col_name,	
-		  Image: { /* required */
-		    Bytes: base64data    
-		  },
-		  FaceMatchThreshold: 75,
-		  MaxFaces: 10
-		};
-
-		rekognition.searchFacesByImage(params, function(err, data) {
-		  if (err) {
-		  		console.log( ' **** IDENTIFY ERROR ******')
-		  		console.log(err, err.stack); 
-		  		errorCallback({error:err});
-		  }
-		  else     {
-		  			console.log('***** IDENTIFY END ****** '+imageFile)
-		  			if (data.FaceMatches.length > 0){
-		  				console.log('DETECCION EXITOSA')
-						//console.log(data.FaceMatches); 
-						face = data.FaceMatches[0]
-						//console.log(face); 
-
-						//console.log('USER '+face.Face.ExternalImageId)
-						//console.log(' SIMILARITY : '+face.Similarity); 
-						//console.log(' FACE ID '+face.Face.FaceId)
-						//console.log(' IMAGE ID '+face.Face.ImageId)
-						//console.log(' Confidence '+face.Face.Confidence)
-
-						callback(face)
-		  			} else {
-		  				console.log(' *** IDENTIFY NO HAY CARACAS **** ')	
-		  				callback(null)
-		  			}
-
-			}
-		}, function(a, b){
-
-			console.log('test d error')
-		});
-
-	});
-
-
-}
 
 
 var test_compare = function(){
@@ -72,16 +20,20 @@ var test_compare = function(){
 
 
 
-function test_identity(){
+function test_identity(file){
 
 
-		fs.readFile('images_knows/27861335112_fc13951d18_o.jpg', function (err, data) {
+		fs.readFile(file, function (err, data) {
 		  	if (err) { throw err; }
 
 		  	var base64data = new Buffer(data, 'binary');
 
-		  	identify_from_base64(base64data, 
-		  						function(ok){},
+		  	awsreco.identify_from_base64(base64data, 
+		  						function(ok){
+
+		  								console.log(ok)
+
+		  						},
 		  						function(error){
 		  							console.log(error.message)
 		  						}
@@ -155,7 +107,7 @@ function compare_faces_from_s3(s3_image1, s3_image2, callback){
 }
 
 
-function upload_know_from_file(imageFile, id_user){
+function upload_from_file(imageFile, id_user){
 // Read in the file, convert it to base64, store to S3
 
 		//console.log(imageFile)
@@ -165,20 +117,7 @@ function upload_know_from_file(imageFile, id_user){
 		fs.readFile(imageFile, function (err, data) {
 		  if (err) { throw err; }
 
-		  var base64data = new Buffer(data, 'binary');
-
-		 var params = {
-		  Body: base64data, 
-		  Bucket: bucket_name, 
-		  Key: fn, 
-		  Tagging: "id_user="+id_user
-		 };
-
-		  //var s3 = new AWS.S3();
-		  s3.putObject(params,function (resp) {
-		    console.log(arguments);
-		    console.log('Successfully uploaded package.');
-		  });
+		 	awsreco.store_ins3_foruser_frombase64(data, id_user, console.log , console.error);
 
 		});
 }
@@ -292,7 +231,9 @@ function test_index(){
 // test_get_faces();
 //delete_collection(awsreco.col_name)
 //init_collection(awsreco.col_name)
-console.log(test_get_faces());
+//console.log(test_get_faces());
 
+//upload_from_file('/home/chily/Documents/photos/Fluxers-Fotos/LOTE 6/santiago-urrizola-byn.jpg', 'chily');
 
+//test_identity('/home/chily/Desktop/test/santiago-urrizola-byn.jpg')
 
