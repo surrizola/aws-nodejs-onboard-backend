@@ -97,7 +97,7 @@ var  index_from_base64 = function(image_base64,username,  callback, errorCallbac
 		  }
 		  else {
 		  	console.log('***** OK INDEX ****** ['+username+']')
-		  	console.log(data);           
+		  	//console.log(data);           
 		  	if (callback){
 		  		callback(data)
 		  	}
@@ -132,7 +132,7 @@ var store_ins3_foruser_frombase64= function(base64 , username, callback, errorca
 		  s3.putObject(params,function (error, resp) {
 		  	 if (error) {
 		  		console.log(error, error.stack); 
-		  		if (errorCallback){errorcallback(error)}
+		  		if (errorcallback){errorcallback(error)}
 		  	}else {
 		  		console.log ('PUT OK FOR '+username)
 		  		callback(resp)
