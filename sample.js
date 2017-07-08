@@ -147,45 +147,130 @@ var store_ins3_foruser_frombase64= function(base64 , username, callback, errorca
 
 
 
+var  detect_from_base64 = function(image_base64_1, callback, errorCallback){
+
+	var image_base64_1_binary = new Buffer(image_base64_1, 'binary');
+	//var image_base64_2_binary = new Buffer(image_base64_2, 'binary'); 		
+ 	console.log('START DETECT FACE')
+ 		//console.log(errorCallback)
+	 var params = {	  
+	  	Image: { Bytes: image_base64_1_binary}, 
+  		Attributes: [ 'DEFAULT' , 'ALL']
+	 };
+
+		rekognition.detectFaces(params, function(err, data) {
+		  if (err) {
+		  	console.log('** DETECT ERROR *** '+err.message)
+			//errorCallback(err);
+			errorCallback({message: err.message})
+		  }
+		  else{
+				console.log('***** DETECT END ****** ')
+				if (data.FaceDetails.length > 0){
+					
+					face = data.FaceDetails[0]
+					callback(face)
+				}else {
+					console.log('no hay detect')	
+					if (errorCallback){
+						errorCallback({message: 'no hay caras en la foto'})
+					}
+					
+				}
+			}
+		});
+}
+
+
+
+var onboad_complete = function(image_base64_dni,image_base64_selfie, callback, errorCallback){
+
+	this.compare_from_base64(image_base64_dni, image_base64_selfie,
+		function(face){
+				console.log('ONBOARD STEP 1 COMPLETE ')
+				//console.log(face)
+				console.log(' SIMILARITY : '+face.Similarity); 
+				console.log(' Confidence '+face.Face.Confidence)
+				face_detect = {	'check':'True',
+							'similarity': face.Similarity,
+							'confidence': face.Face.Confidence,
+							'Face':face
+						}
+				console.log(face_detect)
+				face.Face.Landmarks.forEach(function(l){
+					console.log(l.Type);
+				});
+				
+				detect_from_base64(image_base64_selfie ,
+					function(faceDetail){
+						face_detect['FaceDetail'] = faceDetail;
+						console.log('********* ONBOARD FINISH ******* !!')
+						/*
+						if (face.Face.ExternalImageId != id){
+							console.log('indexando usuario')
+							awsreco.index_from_base64(base64PureDni, id, function(data){}, function(error){})
+						}
+						*/
+						
+						callback(face_detect);
+					}
+				
+				 , errorCallback);
+
+
+				
+				
+
+
+
+		},
+		function(error){
+			console.log('IDENTIFY ERROR ');
+			errorCallback( error)
+			//sendErrorMessage(res, error.message)
+		}
+
+	);
+}
+
 
 
 var  compare_from_base64 = function(image_base64_1,image_base64_2, callback, errorCallback){
-	
-	
+
 	var image_base64_1_binary = new Buffer(image_base64_1, 'binary');
 	var image_base64_2_binary = new Buffer(image_base64_2, 'binary'); 		
- 		console.log('START COMPARE')
- 		console.log(errorCallback)
+ 	console.log('START COMPARE')
+ 		//console.log(errorCallback)
 	 var params = {
-	  SimilarityThreshold: 75, 
+	  SimilarityThreshold: 65, 
 	  SourceImage: { Bytes: image_base64_1_binary}, 
 	  TargetImage: { Bytes: image_base64_2_binary}
 	 };
 
-	 console
-
 		rekognition.compareFaces(params, function(err, data) {
 		  if (err) {
-		  		console.log('** COMPARE ERROR *** ')
-		  		
-		  		errorCallback(err);
+		  	console.log('** COMPARE ERROR *** '+err.message)
+			//errorCallback(err);
+			errorCallback({message: 'Las fotos que nos enviaste no pertenecen a la misma persona'})
 		  }
-		  else     {
-		  			console.log('***** COMPARE END ****** ')
-		  			if (data.FaceMatches.length > 0){
-						face = data.FaceMatches[0]
-						callback(face)
-		  			}else {
-		  				console.log('no hay comparacion')	
-		  				errorCallback({message: 'Las fotos que nos enviaste no pertenecen a la misma persona'})
-		  			}
-
-
+		  else{
+				console.log('***** COMPARE END ****** ')
+				if (data.FaceMatches.length > 0){
+					face = data.FaceMatches[0]
+					callback(face)
+				}else {
+					console.log('no hay comparacion')	
+					if (errorCallback){
+						errorCallback({message: 'Las fotos que nos enviaste no pertenecen a la misma persona'})
 					}
+					
+				}
+			}
 		});
-
-
 }
+
+
+
 
 
 
@@ -231,6 +316,7 @@ var  identify_from_base64 = function(base64, callback, errorCallback){
 
 
 
+
 //exports.test_compare= test_compare;
 
 exports.identify_from_base64 = identify_from_base64;
@@ -239,7 +325,8 @@ exports.compare_from_base64 = compare_from_base64;
 
 exports.index_from_base64 = index_from_base64;
 
-
+exports.detect_from_base64 = detect_from_base64
+exports.onboad_complete = onboad_complete 
 exports.store_ins3_foruser_frombase64 = store_ins3_foruser_frombase64
 
 exports.get_faces = get_faces

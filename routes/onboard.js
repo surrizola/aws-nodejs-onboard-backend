@@ -15,40 +15,27 @@ console.log(req.body.image);
 
 
 
-	function decodeBase64Image(dataString) {
-
-
-		
-
-
-	  var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-	  var response = {};
-
-	  if (matches.length !== 3) {
-	    return new Error('Invalid input string');
-	  }
-	  //response.test = matches[0];
-	  response.type = matches[1];
-	  response.data = new Buffer(matches[2], 'base64');
-
-	  	console.log('**** ORIGINAL ***')
-console.log(dataString);
-
-console.log('**** MODIFIY ***')
-console.log(response.data);
-	  return response;
-	}
-
-function saveToDisk(fullBase64){
+function saveToDisk(fullBase64, name){
 	//var data = 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAA..kJggg==';
 	var data = fullBase64;
 	var imageBuffer = decodeBase64Image(data);
-	console.log(imageBuffer);
-	fs.writeFile('test.jpg', imageBuffer.data, function(err) { console.log(err) });
-
-
-
+	//console.log(imageBuffer);
+	fs.writeFile('./tmp/'+name, imageBuffer.data, function(err) { console.log('error '+err) });
 }
+
+
+function decodeBase64Image(dataString) {
+	var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+	var response = {};
+
+	if (matches.length !== 3) {
+	    return new Error('Invalid input string');
+	}
+	response.type = matches[1];
+	response.data = new Buffer(matches[2], 'base64');
+	return response;
+}
+
 
 router.post('/identify/v1', function(req, res, next) {
 	console.log('IDENTIFY API CALL');
@@ -169,8 +156,14 @@ function compareOk(res , face){
 
 router.post('/onboard/v1', function(req, res, next) {
 	
-	name = req.body.name
-	console.log('ONBOARD API CALL '+name);
+	id = req.body.id
+	console.log('ONBOARD API CALL '+id);
+
+
+	saveToDisk(req.body.dni, 'img1.jpg')
+	saveToDisk(req.body.selfie, 'img2.jpg')
+	
+		
 	base64PureDni = decodeBase64Image(req.body.dni).data;
 	base64PureSelfie = decodeBase64Image(req.body.selfie).data;
 	
@@ -179,38 +172,51 @@ router.post('/onboard/v1', function(req, res, next) {
 		function(face){
 				console.log('IS FACE PRESENT '+face.Face.ExternalImageId)
 				console.log(face)
-				console.log(' USER '+face.Face.ExternalImageId)
 				console.log(' SIMILARITY : '+face.Similarity); 
-				console.log(' FACE ID '+face.Face.FaceId)
-				console.log(' IMAGE ID '+face.Face.ImageId)
 				console.log(' Confidence '+face.Face.Confidence)
 				face_detect = {	'check':'True',
-							'name': face.Face.ExternalImageId,	
-							'faceId':face.Face.FaceId,
 							'similarity': face.Similarity,
-							'confidence': face.Face.Confidence
+							'confidence': face.Face.Confidence,
+							'face':face
 						}
-				console.log(face_detect)
-
-				if (face.Face.ExternalImageId != name){
-					console.log('indexando usuario')
-					awsreco.index_from_base64(base64PureDni, name, function(data){}, function(error){})
-				}
-				
-
 				res.json(face_detect);
-
-
-
 		},
 		function(error){
 			console.log('IDENTIFY ERROR ');
 			sendErrorMessage(res, error.message)
 		}
 
-	);
+	);  	
+});
 
-  	
+
+
+
+
+router.post('/onboard/v2', function(req, res, next) {
+	
+	id = req.body.id
+	console.log('ONBOARD API CALL '+id);
+
+
+	saveToDisk(req.body.dni, 'img1.jpg')
+	saveToDisk(req.body.selfie, 'img2.jpg')
+	
+		
+	base64PureDni = decodeBase64Image(req.body.dni).data;
+	base64PureSelfie = decodeBase64Image(req.body.selfie).data;
+	
+
+	awsreco.onboad_complete(base64PureDni, base64PureSelfie,
+		function(face){
+				res.json(face);
+		},
+		function(error){
+			console.log('IDENTIFY ERROR ');
+			sendErrorMessage(res, error.message)
+		}
+
+	);  	
 });
 
 
